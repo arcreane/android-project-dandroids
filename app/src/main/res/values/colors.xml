@@ -1,5 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Focus theme colors -->
+    <color name="focus_primary">#1B1F3B</color>
+    <color name="focus_secondary">#2D325A</color>
+    <color name="focus_accent">#5C6BC0</color>
+    <color name="focus_background">#121428</color>
+    <color name="focus_surface">#1E2240</color>
+    <color name="focus_on_primary">#FFFFFF</color>
+    <color name="focus_on_background">#E8EAF6</color>
+
+    <!-- Review theme colors -->
+    <color name="review_primary">#FFFFFF</color>
+    <color name="review_secondary">#F5F5F5</color>
+    <color name="review_accent">#3F51B5</color>
+    <color name="review_background">#FAFAFA</color>
+    <color name="review_surface">#FFFFFF</color>
+    <color name="review_on_primary">#1B1F3B</color>
+    <color name="review_on_background">#212121</color>
+
+    <!-- Shared -->
+    <color name="timer_running">#4CAF50</color>
+    <color name="timer_paused">#FF9800</color>
+    <color name="chart_bar">#5C6BC0</color>
+    <color name="chart_bar_alt">#9FA8DA</color>
 </resources>
