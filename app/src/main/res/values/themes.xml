@@ -1,9 +1,24 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.StudyTracker" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Focus theme: dark, low distraction -->
+    <style name="Theme.StudyTracker" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="colorPrimary">@color/focus_primary</item>
+        <item name="colorPrimaryVariant">@color/focus_secondary</item>
+        <item name="colorAccent">@color/focus_accent</item>
+        <item name="android:windowBackground">@color/focus_background</item>
+        <item name="colorSurface">@color/focus_surface</item>
+        <item name="android:textColorPrimary">@color/focus_on_background</item>
     </style>
 
-    <style name="Theme.StudyTracker" parent="Base.Theme.StudyTracker" />
+    <!-- Review theme: light, full info -->
+    <style name="Theme.StudyTracker.Review" parent="Theme.MaterialComponents.Light.DarkActionBar">
+        <item name="colorPrimary">@color/review_accent</item>
+        <item name="colorPrimaryVariant">@color/review_secondary</item>
+        <item name="colorAccent">@color/review_accent</item>
+        <item name="android:windowBackground">@color/review_background</item>
+        <item name="colorSurface">@color/review_surface</item>
+        <item name="android:textColorPrimary">@color/review_on_background</item>
+    </style>
+
 </resources>
