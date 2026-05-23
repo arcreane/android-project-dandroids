@@ -15,13 +15,11 @@
         android:textAppearance="?attr/textAppearanceHeadline6"
         android:layout_marginBottom="24dp"/>
 
-    <TextView
-        android:id="@+id/tv_timer"
-        style="@style/StudyTracker.TimerText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="25:00"
-        android:layout_marginBottom="48dp"/>
+    <com.dandroids.studytracker.views.TimerProgressView
+        android:id="@+id/timer_progress_view"
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        android:layout_marginBottom="40dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
