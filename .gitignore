@@ -9,10 +9,10 @@
 /.idea/assetWizardSettings.xml
 .DS_Store
 /build
-app/build/
-*.keystore
 /captures
 .externalNativeBuild
 .cxx
 local.properties
+app/build/
+*.keystore
 .vscode/
