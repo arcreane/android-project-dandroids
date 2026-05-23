@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="?attr/colorSurface">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Settings"
+        android:textAppearance="?attr/textAppearanceHeadline6"
+        android:layout_marginBottom="24dp"/>
+
+    <Button
+        android:id="@+id/btn_export_csv"
+        style="@style/StudyTracker.Button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/menu_export"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btn_reset_stats"
+        style="@style/StudyTracker.Button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/menu_reset"/>
+
+</LinearLayout>
