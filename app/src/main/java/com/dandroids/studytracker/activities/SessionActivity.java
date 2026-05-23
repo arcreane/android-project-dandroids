@@ -8,20 +8,32 @@ import android.os.IBinder;
 import android.widget.Button;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.dandroids.studytracker.R;
+import com.dandroids.studytracker.manager.PomodoroManager;
+import com.dandroids.studytracker.model.Session;
 import com.dandroids.studytracker.service.TimerService;
+import com.dandroids.studytracker.viewmodel.StudyViewModel;
+import com.dandroids.studytracker.views.TimerProgressView;
 
-public class SessionActivity extends AppCompatActivity {
+public class SessionActivity extends BaseActivity {
 
     private TimerService timerService;
     private boolean isBound = false;
     private boolean isPaused = false;
 
-    private TextView tvTimer;
+    private TimerProgressView timerProgressView;
+    private TextView tvSubjectName;
     private Button btnPauseResume;
     private Button btnStop;
+
+    private StudyViewModel viewModel;
+    private PomodoroManager pomodoroManager;
+
+    private long sessionStartTime;
+    private long totalDuration;
+    private long subjectId = 1L; // default subject
 
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -34,15 +46,22 @@ public class SessionActivity extends AppCompatActivity {
                 @Override
                 public void onTick(long millisRemaining) {
                     runOnUiThread(() -> {
-                        long minutes = (millisRemaining / 1000) / 60;
-                        long seconds = (millisRemaining / 1000) % 60;
-                        tvTimer.setText(String.format("%02d:%02d", minutes, seconds));
+                        if (timerProgressView != null) {
+                            timerProgressView.setProgress(millisRemaining, totalDuration);
+                        }
                     });
                 }
 
                 @Override
                 public void onFinish() {
-                    runOnUiThread(() -> tvTimer.setText("00:00"));
+                    runOnUiThread(() -> {
+                        if (timerProgressView != null) {
+                            timerProgressView.setProgress(0, totalDuration);
+                        }
+                        // Save completed session to Room DB — HR
+                        saveSessionToDatabase(true);
+                        pomodoroManager.advance();
+                    });
                 }
             });
         }
@@ -58,12 +77,31 @@ public class SessionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
 
-        tvTimer = findViewById(R.id.tv_timer);
+        viewModel = new ViewModelProvider(this).get(StudyViewModel.class);
+        pomodoroManager = new PomodoroManager(this);
+
+        timerProgressView = findViewById(R.id.timer_progress_view);
+        tvSubjectName = findViewById(R.id.tv_subject_name);
         btnPauseResume = findViewById(R.id.btn_pause_resume);
         btnStop = findViewById(R.id.btn_stop);
 
+        // Get duration and label from PomodoroManager via DashboardActivity intent
+        totalDuration = getIntent().getLongExtra("DURATION_MILLIS",
+                PomodoroManager.FOCUS_DURATION);
+        String label = getIntent().getStringExtra("SESSION_LABEL");
+        if (label == null)
+            label = pomodoroManager.getCurrentLabel();
+
+        if (tvSubjectName != null)
+            tvSubjectName.setText(label);
+        if (timerProgressView != null)
+            timerProgressView.setLabelText(label);
+
+        sessionStartTime = System.currentTimeMillis();
+
+        // Start and bind foreground service
         Intent serviceIntent = new Intent(this, TimerService.class);
-        serviceIntent.putExtra("DURATION_MILLIS", 25 * 60 * 1000L);
+        serviceIntent.putExtra("DURATION_MILLIS", totalDuration);
         startService(serviceIntent);
         bindService(serviceIntent, connection, BIND_AUTO_CREATE);
 
@@ -84,9 +122,21 @@ public class SessionActivity extends AppCompatActivity {
         btnStop.setOnClickListener(v -> {
             if (isBound)
                 timerService.stopTimer();
+            saveSessionToDatabase(false); // incomplete session
             stopService(new Intent(this, TimerService.class));
             finish();
         });
+    }
+
+    /**
+     * Saves the session to Room database — HR owns this
+     */
+    private void saveSessionToDatabase(boolean completed) {
+        Session session = new Session(subjectId, sessionStartTime);
+        session.endTime = System.currentTimeMillis();
+        session.completed = completed;
+        session.durationMinutes = (int) ((session.endTime - sessionStartTime) / 60000);
+        viewModel.insertSession(session);
     }
 
     @Override
