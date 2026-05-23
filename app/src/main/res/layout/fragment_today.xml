@@ -13,6 +13,15 @@
         android:textAppearance="?attr/textAppearanceSubtitle1"
         android:padding="8dp"/>
 
+    <TextView
+        android:id="@+id/tv_total_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?attr/textAppearanceCaption"
+        android:paddingStart="8dp"
+        android:paddingBottom="8dp"
+        android:text="Total today: 0 min"/>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_today_sessions"
         android:layout_width="match_parent"
