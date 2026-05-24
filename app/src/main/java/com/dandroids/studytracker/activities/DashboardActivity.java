@@ -19,6 +19,8 @@ import com.dandroids.studytracker.model.Subject;
 import com.dandroids.studytracker.viewmodel.StudyViewModel;
 import com.google.android.material.tabs.TabLayout;
 
+import java.util.List;
+
 public class DashboardActivity extends BaseActivity {
 
     private static final String KEY_TAB = "selected_tab";
@@ -27,31 +29,51 @@ public class DashboardActivity extends BaseActivity {
     private PomodoroManager pomodoroManager;
     private int selectedTab = 0;
 
+    // Track available subjects to pass to SessionActivity
+    private List<Subject> subjects;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
-        viewModel        = new ViewModelProvider(this).get(StudyViewModel.class);
-        pomodoroManager  = new PomodoroManager(this);
+        viewModel       = new ViewModelProvider(this).get(StudyViewModel.class);
+        pomodoroManager = new PomodoroManager(this);
 
         // Restore tab position after rotation (R2)
         if (savedInstanceState != null) {
             selectedTab = savedInstanceState.getInt(KEY_TAB, 0);
         }
 
+        // Observe subjects
+        viewModel.allSubjects.observe(this, subjectList -> {
+            subjects = subjectList;
+        });
+
         setupTabs();
 
         findViewById(R.id.btn_start_session).setOnClickListener(v -> {
+            if (subjects == null || subjects.isEmpty()) {
+                // No subjects yet — prompt to create one first
+                new AlertDialog.Builder(this)
+                        .setTitle("No subjects yet")
+                        .setMessage("Please add a subject first using the menu.")
+                        .setPositiveButton("OK", null)
+                        .show();
+                return;
+            }
+
+            // Use first subject for now — user can add more via menu
+            long subjectId = subjects.get(0).id;
+
             Intent intent = new Intent(this, SessionActivity.class);
-            // Pass Pomodoro info to SessionActivity
             intent.putExtra("DURATION_MILLIS", pomodoroManager.getCurrentDuration());
             intent.putExtra("SESSION_LABEL",   pomodoroManager.getCurrentLabel());
+            intent.putExtra("SUBJECT_ID",      subjectId);
             startActivity(intent);
         });
     }
 
-    // Save tab position before rotation (R2)
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -64,7 +86,6 @@ public class DashboardActivity extends BaseActivity {
         tabLayout.addTab(tabLayout.newTab().setText(R.string.tab_week));
         tabLayout.addTab(tabLayout.newTab().setText(R.string.tab_subjects));
 
-        // Restore selected tab after rotation
         tabLayout.selectTab(tabLayout.getTabAt(selectedTab));
         loadFragment(getFragmentForTab(selectedTab));
 
@@ -104,13 +125,16 @@ public class DashboardActivity extends BaseActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_theme) {
-            toggleTheme(); // BaseActivity handles this
+            toggleTheme();
             return true;
         } else if (id == R.id.action_export) {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
         } else if (id == R.id.action_reset) {
             showResetConfirmation();
+            return true;
+        } else if (id == R.id.action_add_subject) {
+            showAddSubjectDialog();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -128,7 +152,6 @@ public class DashboardActivity extends BaseActivity {
                 .show();
     }
 
-    // Subject creation dialog — MSJ
     public void showAddSubjectDialog() {
         EditText input = new EditText(this);
         input.setHint("Subject name (e.g. Maths)");
