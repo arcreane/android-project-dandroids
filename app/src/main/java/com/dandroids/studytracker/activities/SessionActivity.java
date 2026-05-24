@@ -20,7 +20,7 @@ import com.dandroids.studytracker.views.TimerProgressView;
 public class SessionActivity extends BaseActivity {
 
     private TimerService timerService;
-    private boolean isBound = false;
+    private boolean isBound  = false;
     private boolean isPaused = false;
 
     private TimerProgressView timerProgressView;
@@ -33,7 +33,7 @@ public class SessionActivity extends BaseActivity {
 
     private long sessionStartTime;
     private long totalDuration;
-    private long subjectId = 1L; // default subject
+    private long subjectId = -1L; // -1 means no subject selected yet
 
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -58,7 +58,6 @@ public class SessionActivity extends BaseActivity {
                         if (timerProgressView != null) {
                             timerProgressView.setProgress(0, totalDuration);
                         }
-                        // Save completed session to Room DB — HR
                         saveSessionToDatabase(true);
                         pomodoroManager.advance();
                     });
@@ -77,37 +76,32 @@ public class SessionActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
 
-        viewModel = new ViewModelProvider(this).get(StudyViewModel.class);
+        viewModel      = new ViewModelProvider(this).get(StudyViewModel.class);
         pomodoroManager = new PomodoroManager(this);
 
         timerProgressView = findViewById(R.id.timer_progress_view);
-        tvSubjectName = findViewById(R.id.tv_subject_name);
-        btnPauseResume = findViewById(R.id.btn_pause_resume);
-        btnStop = findViewById(R.id.btn_stop);
+        tvSubjectName     = findViewById(R.id.tv_subject_name);
+        btnPauseResume    = findViewById(R.id.btn_pause_resume);
+        btnStop           = findViewById(R.id.btn_stop);
 
-        // Get duration and label from PomodoroManager via DashboardActivity intent
         totalDuration = getIntent().getLongExtra("DURATION_MILLIS",
                 PomodoroManager.FOCUS_DURATION);
-        String label = getIntent().getStringExtra("SESSION_LABEL");
-        if (label == null)
-            label = pomodoroManager.getCurrentLabel();
+        subjectId     = getIntent().getLongExtra("SUBJECT_ID", -1L);
+        String label  = getIntent().getStringExtra("SESSION_LABEL");
+        if (label == null) label = pomodoroManager.getCurrentLabel();
 
-        if (tvSubjectName != null)
-            tvSubjectName.setText(label);
-        if (timerProgressView != null)
-            timerProgressView.setLabelText(label);
+        if (tvSubjectName != null)    tvSubjectName.setText(label);
+        if (timerProgressView != null) timerProgressView.setLabelText(label);
 
         sessionStartTime = System.currentTimeMillis();
 
-        // Start and bind foreground service
         Intent serviceIntent = new Intent(this, TimerService.class);
         serviceIntent.putExtra("DURATION_MILLIS", totalDuration);
         startService(serviceIntent);
         bindService(serviceIntent, connection, BIND_AUTO_CREATE);
 
         btnPauseResume.setOnClickListener(v -> {
-            if (!isBound)
-                return;
+            if (!isBound) return;
             if (isPaused) {
                 timerService.resumeTimer();
                 btnPauseResume.setText(R.string.pause_session);
@@ -120,23 +114,22 @@ public class SessionActivity extends BaseActivity {
         });
 
         btnStop.setOnClickListener(v -> {
-            if (isBound)
-                timerService.stopTimer();
-            saveSessionToDatabase(false); // incomplete session
+            if (isBound) timerService.stopTimer();
             stopService(new Intent(this, TimerService.class));
-            finish();
+            saveSessionToDatabase(false);
         });
     }
 
-    /**
-     * Saves the session to Room database — HR owns this
-     */
     private void saveSessionToDatabase(boolean completed) {
-        Session session = new Session(subjectId, sessionStartTime);
-        session.endTime = System.currentTimeMillis();
-        session.completed = completed;
-        session.durationMinutes = (int) ((session.endTime - sessionStartTime) / 60000);
-        viewModel.insertSession(session);
+        // Only save if we have a valid subject
+        if (subjectId > 0) {
+            Session session    = new Session(subjectId, sessionStartTime);
+            session.endTime    = System.currentTimeMillis();
+            session.completed  = completed;
+            session.durationMinutes = (int) ((session.endTime - sessionStartTime) / 60000);
+            viewModel.insertSession(session);
+        }
+        finish();
     }
 
     @Override
