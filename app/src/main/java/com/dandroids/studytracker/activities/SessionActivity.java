@@ -33,7 +33,7 @@ public class SessionActivity extends BaseActivity {
 
     private long sessionStartTime;
     private long totalDuration;
-    private long subjectId = -1L; // -1 means no subject selected yet
+    private long subjectId = -1L;
 
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -76,7 +76,7 @@ public class SessionActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
 
-        viewModel      = new ViewModelProvider(this).get(StudyViewModel.class);
+        viewModel       = new ViewModelProvider(this).get(StudyViewModel.class);
         pomodoroManager = new PomodoroManager(this);
 
         timerProgressView = findViewById(R.id.timer_progress_view);
@@ -90,7 +90,7 @@ public class SessionActivity extends BaseActivity {
         String label  = getIntent().getStringExtra("SESSION_LABEL");
         if (label == null) label = pomodoroManager.getCurrentLabel();
 
-        if (tvSubjectName != null)    tvSubjectName.setText(label);
+        if (tvSubjectName != null)     tvSubjectName.setText(label);
         if (timerProgressView != null) timerProgressView.setLabelText(label);
 
         sessionStartTime = System.currentTimeMillis();
@@ -114,18 +114,25 @@ public class SessionActivity extends BaseActivity {
         });
 
         btnStop.setOnClickListener(v -> {
-            if (isBound) timerService.stopTimer();
-            stopService(new Intent(this, TimerService.class));
-            saveSessionToDatabase(false);
+            stopSession(false);
         });
     }
 
+    private void stopSession(boolean completed) {
+        if (isBound) {
+            timerService.stopTimer();
+            unbindService(connection);
+            isBound = false;
+        }
+        stopService(new Intent(this, TimerService.class));
+        saveSessionToDatabase(completed);
+    }
+
     private void saveSessionToDatabase(boolean completed) {
-        // Only save if we have a valid subject
         if (subjectId > 0) {
-            Session session    = new Session(subjectId, sessionStartTime);
-            session.endTime    = System.currentTimeMillis();
-            session.completed  = completed;
+            Session session         = new Session(subjectId, sessionStartTime);
+            session.endTime         = System.currentTimeMillis();
+            session.completed       = completed;
             session.durationMinutes = (int) ((session.endTime - sessionStartTime) / 60000);
             viewModel.insertSession(session);
         }
