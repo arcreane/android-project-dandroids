@@ -25,6 +25,7 @@
         <activity
             android:name=".activities.SessionActivity"
             android:exported="false"
+            android:launchMode="singleTop"
             android:configChanges="orientation|screenSize"/>
 
         <activity
