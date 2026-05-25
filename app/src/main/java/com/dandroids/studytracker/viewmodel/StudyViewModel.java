@@ -45,6 +45,10 @@ public class StudyViewModel extends AndroidViewModel {
         executor.execute(() -> subjectDao.insert(subject));
     }
 
+    public void deleteSubject(Subject subject) {
+        executor.execute(() -> subjectDao.delete(subject));
+    }
+
     public void deleteAllSessions() {
         executor.execute(sessionDao::deleteAll);
     }
