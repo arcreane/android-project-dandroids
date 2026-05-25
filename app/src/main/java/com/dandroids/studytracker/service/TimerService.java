@@ -73,6 +73,12 @@ public class TimerService extends Service {
     }
 
     public void startTimer(long durationMillis) {
+        // Cancel any existing timer before starting a new one
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+            countDownTimer = null;
+        }
+
         remainingMillis = durationMillis;
         isRunning = true;
 
@@ -97,6 +103,7 @@ public class TimerService extends Service {
     public void pauseTimer() {
         if (countDownTimer != null) {
             countDownTimer.cancel();
+            countDownTimer = null;
             isRunning = false;
             updateNotification("Paused — " + formatTime(remainingMillis));
         }
@@ -109,7 +116,10 @@ public class TimerService extends Service {
     }
 
     public void stopTimer() {
-        if (countDownTimer != null) countDownTimer.cancel();
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+            countDownTimer = null;
+        }
         isRunning = false;
         remainingMillis = 0;
     }
@@ -190,6 +200,11 @@ public class TimerService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (countDownTimer != null) countDownTimer.cancel();
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+            countDownTimer = null;
+        }
+        stopForeground(true); // removes notification
+        isRunning = false;
     }
 }
