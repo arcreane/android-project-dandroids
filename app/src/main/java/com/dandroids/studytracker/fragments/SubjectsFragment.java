@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -47,9 +48,38 @@ public class SubjectsFragment extends Fragment {
         viewModel.allSubjects.observe(getViewLifecycleOwner(), subjects -> {
             adapter.setSubjects(subjects);
         });
+
+        // Swipe left to delete subject
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
+                0, ItemTouchHelper.LEFT) {
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView rv,
+                                  @NonNull RecyclerView.ViewHolder vh,
+                                  @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder,
+                                 int direction) {
+                int position = viewHolder.getAdapterPosition();
+                Subject subject = adapter.getSubjectAt(position);
+                // Confirm before deleting
+                new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle("Delete Subject")
+                        .setMessage("Delete \"" + subject.name + "\"?")
+                        .setPositiveButton("Delete", (dialog, which) ->
+                                viewModel.deleteSubject(subject))
+                        .setNegativeButton("Cancel", (dialog, which) ->
+                                adapter.notifyItemChanged(position))
+                        .setOnCancelListener(d ->
+                                adapter.notifyItemChanged(position))
+                        .show();
+            }
+        }).attachToRecyclerView(recyclerView);
     }
 
-    // Simple inline adapter for subjects list
     static class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.SubjectViewHolder> {
 
         private List<Subject> subjects = new ArrayList<>();
@@ -57,6 +87,10 @@ public class SubjectsFragment extends Fragment {
         public void setSubjects(List<Subject> subjects) {
             this.subjects = subjects != null ? subjects : new ArrayList<>();
             notifyDataSetChanged();
+        }
+
+        public Subject getSubjectAt(int position) {
+            return subjects.get(position);
         }
 
         @NonNull
