@@ -28,8 +28,6 @@ public class DashboardActivity extends BaseActivity {
     private StudyViewModel viewModel;
     private PomodoroManager pomodoroManager;
     private int selectedTab = 0;
-
-    // Track available subjects to pass to SessionActivity
     private List<Subject> subjects;
 
     @Override
@@ -40,12 +38,10 @@ public class DashboardActivity extends BaseActivity {
         viewModel       = new ViewModelProvider(this).get(StudyViewModel.class);
         pomodoroManager = new PomodoroManager(this);
 
-        // Restore tab position after rotation (R2)
         if (savedInstanceState != null) {
             selectedTab = savedInstanceState.getInt(KEY_TAB, 0);
         }
 
-        // Observe subjects
         viewModel.allSubjects.observe(this, subjectList -> {
             subjects = subjectList;
         });
@@ -54,18 +50,14 @@ public class DashboardActivity extends BaseActivity {
 
         findViewById(R.id.btn_start_session).setOnClickListener(v -> {
             if (subjects == null || subjects.isEmpty()) {
-                // No subjects yet — prompt to create one first
                 new AlertDialog.Builder(this)
                         .setTitle("No subjects yet")
-                        .setMessage("Please add a subject first using the menu.")
+                        .setMessage("Please add a subject first using the ⋮ menu.")
                         .setPositiveButton("OK", null)
                         .show();
                 return;
             }
-
-            // Use first subject for now — user can add more via menu
             long subjectId = subjects.get(0).id;
-
             Intent intent = new Intent(this, SessionActivity.class);
             intent.putExtra("DURATION_MILLIS", pomodoroManager.getCurrentDuration());
             intent.putExtra("SESSION_LABEL",   pomodoroManager.getCurrentLabel());
@@ -164,6 +156,15 @@ public class DashboardActivity extends BaseActivity {
                     if (name.isEmpty()) {
                         input.setError("Name cannot be empty");
                         return;
+                    }
+                    // Duplicate check
+                    if (subjects != null) {
+                        for (Subject s : subjects) {
+                            if (s.name.equalsIgnoreCase(name)) {
+                                input.setError("Subject already exists");
+                                return;
+                            }
+                        }
                     }
                     viewModel.insertSubject(new Subject(name, "#5C6BC0"));
                 })
